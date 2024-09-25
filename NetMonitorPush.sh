@@ -18,9 +18,14 @@ current_day=$(date +"%d")
 # 昨天的日期
 yesterday=$(date -d "yesterday" +"%Y-%m-%d")
 
-# 检查vnstat是否安装
+# 检查vnstat和jq是否安装
 if ! command -v vnstat &> /dev/null; then
-  echo "vnstat 未安装，请先安装vnstat"
+  echo "vnstat 未安装，请先安装 vnstat"
+  exit 1
+fi
+
+if ! command -v jq &> /dev/null; then
+  echo "jq 未安装，请先安装 jq"
   exit 1
 fi
 
@@ -38,6 +43,7 @@ if [[ "$ax" == *GB* ]]; then
   # 比较流量大小
   if (( $(echo "$actual_traffic >= $traffic_limit" | bc -l) )); then
     echo "流量超出限制，关机中..."
+
     # 企业微信推送关机消息
     shutdown_message="流量超出限制（${actual_traffic} GB），正在关机..."
 
@@ -75,11 +81,11 @@ if [[ "$current_time" == "08:00" ]]; then
   # 获取前一天的流量
   yesterday_traffic=$(vnstat -d -i "$interface_name" | grep "$yesterday" | awk '{print $8, $9}')
   
-  #获取前一天的平均速率
+  # 获取前一天的平均速率
   yesterday_rate=$(vnstat -d -i "$interface_name" | grep "$yesterday" | awk '{print $11, $12}')
 
   # 企业微信推送消息
-  message="${yesterday} 流量报告\n流量已使用 ${yesterday_traffic}\n平均速率：${yesterday_rate} \n当月总流量：${ax}"
+  message="${yesterday} 流量报告\n流量已使用：${yesterday_traffic}\n平均速率：${yesterday_rate}\n当月总流量：${ax}"
 
   # 获取企业微信的 access_token
   access_token=$(curl -s -G "https://qyapi.weixin.qq.com/cgi-bin/gettoken" \
