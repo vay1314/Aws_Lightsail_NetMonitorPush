@@ -1,10 +1,10 @@
 #!/bin/bash
 
 # 网卡名称
-interface_name="eth0"
+interface_name="ens5"
 
 # 流量阈值上限（单位：GB）
-traffic_limit=1000
+traffic_limit=950
 
 # 企业微信推送相关信息
 CorpID=""
@@ -63,16 +63,16 @@ utc_month_end=$(date -u -d "${current_utc_year}-${current_utc_month}-01 +1 month
 
 echo "============================================="
 echo "本次检查时间: $current_local_time"
-echo "当前UTC日期: $(date -u +"%Y-%m-%d %H:%M:%S")"
-echo "统计UTC月份: $utc_month_start 至 $utc_month_end"
+echo "UTC时区当前时间: $(date -u +"%Y-%m-%d %H:%M:%S")"
+echo "UTC时区统计月份: $utc_month_start 至 $utc_month_end"
 echo "============================================="
 
 # 获取当前UTC月份的流量
 # 使用--begin和--end参数指定UTC时间范围
-echo "获取月度流量信息..."
+echo "获取本月流量信息..."
 monthly_traffic=$($VNSTAT_PATH -i "$interface_name" --begin "$utc_month_start" --end "$utc_month_end" --oneline | awk -F ";" '{print $11}')
 
-echo "当前UTC月份流量: $monthly_traffic"
+echo "UTC时区本月流量: $monthly_traffic"
 
 # 修复条件检查语法，使用单括号兼容所有shell
 if [ -n "$monthly_traffic" ] && [ "$(echo "$monthly_traffic" | grep -c "GB")" -gt 0 ]; then
@@ -84,7 +84,7 @@ if [ -n "$monthly_traffic" ] && [ "$(echo "$monthly_traffic" | grep -c "GB")" -g
     echo "流量超出限制，关机中..."
 
     # 企业微信推送关机消息
-    shutdown_message="UTC月份(${utc_month_start}至${utc_month_end})流量超出限制（${actual_traffic} GB），正在关机..."
+    shutdown_message="(${utc_month_start}至${utc_month_end})流量超出限制（${actual_traffic} GB），正在关机..."
 
     # 获取企业微信的 access_token
     access_token=$(curl -s -G "https://qyapi.weixin.qq.com/cgi-bin/gettoken" \
@@ -109,10 +109,10 @@ if [ -n "$monthly_traffic" ] && [ "$(echo "$monthly_traffic" | grep -c "GB")" -g
     # 执行关机命令
     sudo /usr/sbin/shutdown -h now
   else
-    echo "流量未超出限制。当前UTC月份流量为：${actual_traffic} GB"
+    echo "流量未超出限制。不执行关机操作"
   fi
 else
-  echo "当前流量单位不是GB，当前UTC月份流量为：$monthly_traffic"
+  echo "当前流量单位不是GB，UTC时区本月流量为：$monthly_traffic"
 fi
 
 # 使用单括号条件检查语法，兼容所有shell
@@ -124,7 +124,7 @@ if [ "$current_utc_time" = "00:00" ]; then
   yesterday_rate=$($VNSTAT_PATH -d -i "$interface_name" --begin "$yesterday_utc" --end "$yesterday_utc" | grep "$yesterday_utc" | awk '{print $11, $12}')
 
   # 企业微信推送消息
-  message="UTC日期 ${yesterday_utc} 流量报告\n流量已使用：${yesterday_traffic}\n平均速率：${yesterday_rate}\nUTC当月总流量：${monthly_traffic}\n当前时间(CST)：$(date +"%Y-%m-%d %H:%M:%S")"
+  message="${yesterday_utc} (UTC时区)流量报告\n使用流量：${yesterday_traffic}\n平均速率：${yesterday_rate}\n月总流量(UTC时区)：${monthly_traffic}\n当前时间：$(date +"%Y-%m-%d %H:%M:%S")"
 
   # 获取企业微信的 access_token
   access_token=$(curl -s -G "https://qyapi.weixin.qq.com/cgi-bin/gettoken" \
