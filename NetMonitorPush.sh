@@ -36,7 +36,7 @@ if [ -z "$VNSTAT_PATH" ]; then
   echo "vnstat 未安装，请先安装 vnstat"
   exit 1
 else
-  echo "vnstat 已找到: $VNSTAT_PATH"
+  echo "vnstat 依赖已安装"
 fi
 
 # 检查jq
@@ -49,7 +49,7 @@ if [ -z "$JQ_PATH" ]; then
   echo "jq 未安装，请先安装 jq"
   exit 1
 else
-  echo "jq 已找到: $JQ_PATH"
+  echo "jq 依赖已安装"
 fi
 
 # 更新网卡记录
