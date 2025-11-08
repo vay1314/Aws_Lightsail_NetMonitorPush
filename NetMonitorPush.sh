@@ -11,14 +11,14 @@ CorpID=""
 Secret=""
 AgentID=""
 
-# 获取当前UTC时间
+# 获取当前UTC时间（用于流量统计）
 current_utc_time=$(date -u +"%H:%M")
 current_utc_day=$(date -u +"%d")
 current_utc_month=$(date -u +"%m")
 current_utc_year=$(date -u +"%Y")
 
-# 获取本地CST时间（用于日志显示）
-current_local_time=$(date +"%Y-%m-%d %H:%M:%S")
+# 获取北京时间（CST, 用于日志和通知显示）
+current_beijing_time=$(TZ='Asia/Shanghai' date +"%Y-%m-%d %H:%M:%S")
 
 # 昨天的UTC日期
 yesterday_utc=$(date -u -d "yesterday" +"%Y-%m-%d")
@@ -62,7 +62,7 @@ utc_month_start="${current_utc_year}-${current_utc_month}-01"
 utc_month_end=$(date -u -d "${current_utc_year}-${current_utc_month}-01 +1 month -1 day" +"%Y-%m-%d")
 
 echo "============================================="
-echo "本次检查时间: $current_local_time"
+echo "本次检查时间 (北京): $current_beijing_time"
 echo "UTC时区当前时间: $(date -u +"%Y-%m-%d %H:%M:%S")"
 echo "UTC时区统计月份: $utc_month_start 至 $utc_month_end"
 echo "============================================="
@@ -124,7 +124,7 @@ if [ "$current_utc_time" = "00:00" ]; then
   yesterday_rate=$($VNSTAT_PATH -d -i "$interface_name" --begin "$yesterday_utc" --end "$yesterday_utc" | grep "$yesterday_utc" | awk '{print $11, $12}')
 
   # 企业微信推送消息
-  message="${yesterday_utc} (UTC时区)流量报告\n使用流量：${yesterday_traffic}\n平均速率：${yesterday_rate}\n月总流量(UTC时区)：${monthly_traffic}\n当前时间：$(date +"%Y-%m-%d %H:%M:%S")"
+  message="${yesterday_utc} (UTC时区)流量报告\n使用流量：${yesterday_traffic}\n平均速率：${yesterday_rate}\n月总流量(UTC时区)：${monthly_traffic}\n当前时间 (北京)：${current_beijing_time}"
 
   # 获取企业微信的 access_token
   access_token=$(curl -s -G "https://qyapi.weixin.qq.com/cgi-bin/gettoken" \
